@@ -2,534 +2,459 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
 <title>拼豆像素画 · 图片转拼豆图纸</title>
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
-    background:#0d1117;color:#c9d1d9;min-height:100vh;display:flex;flex-direction:column;align-items:center;
-    -webkit-font-smoothing:antialiased;
-  }
-  header{
-    width:100%;padding:28px 24px 20px;text-align:center;
-    background:linear-gradient(135deg,#0d1117 0%,#161b22 100%);
-    border-bottom:1px solid #30363d;
-  }
-  header h1{
-    font-size:30px;font-weight:800;letter-spacing:2px;
-    background:linear-gradient(135deg,#f78166 0%,#f5a623 50%,#56d364 100%);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  }
-  header p{font-size:14px;color:#8b949e;margin-top:6px;letter-spacing:.5px}
-  .container{width:100%;max-width:1024px;padding:28px 24px 48px}
-  
-  .upload-zone{
-    border:2px dashed #30363d;border-radius:16px;padding:56px 24px;
-    text-align:center;cursor:pointer;position:relative;
-    transition:all .25s;background:#161b22;
-  }
-  .upload-zone:hover{border-color:#58a6ff;background:#1c2128}
-  .upload-zone.dragover{border-color:#f78166;transform:scale(1.01)}
-  .upload-zone.has-image{padding:0;border:none;background:none;cursor:default}
-  .upload-zone .icon{font-size:52px;color:#484f58;margin-bottom:12px}
-  .upload-zone h2{font-size:18px;font-weight:600;color:#c9d1d9}
-  .upload-zone p{font-size:13px;color:#8b949e;margin-top:6px}
-  .upload-zone .hint{font-size:12px;color:#484f58;margin-top:12px;display:flex;justify-content:center;gap:16px}
-  .upload-zone .hint span{padding:2px 8px;border:1px solid #30363d;border-radius:4px}
-  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-  .upload-zone.has-image input[type=file]{display:none}
-  
-  .preview-area{display:none}
-  .preview-area.visible{display:block;animation:fadeUp .4s ease}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-  
-  .preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px}
-  
-  .preview-card{
-    background:#161b22;border-radius:12px;overflow:hidden;
-    border:1px solid #30363d;display:flex;flex-direction:column;
-  }
-  .preview-card .label{
-    padding:10px 16px;font-size:13px;font-weight:600;color:#8b949e;
-    border-bottom:1px solid #21262d;display:flex;align-items:center;gap:8px;user-select:none;
-  }
-  .preview-card .label .badge{
-    margin-left:auto;font-size:11px;font-weight:400;
-    background:#21262d;padding:2px 8px;border-radius:4px;color:#8b949e;
-  }
-  .preview-card .canvas-wrap{
-    display:flex;align-items:center;justify-content:center;
-    padding:16px;min-height:280px;flex:1;
-    background:repeating-conic-gradient(#161b22 0% 25%,#1c2128 0% 50%) 0 0 / 20px 20px;
-    overflow:auto;
-  }
-  .preview-card canvas{max-width:100%;max-height:420px;border-radius:4px;image-rendering:auto}
-  
-  .controls{
-    display:flex;flex-wrap:wrap;gap:12px;align-items:center;
-    margin-top:20px;padding:16px 20px;
-    background:#161b22;border-radius:12px;border:1px solid #30363d;
-  }
-  .ctrl-group{display:flex;align-items:center;gap:8px;padding-right:12px;border-right:1px solid #21262d}
-  .ctrl-group:last-child{border-right:none;padding-right:0}
-  .ctrl-group label{font-size:12px;color:#8b949e;white-space:nowrap;font-weight:500}
-  .ctrl-group .value{font-size:15px;font-weight:700;color:#f78166;min-width:28px;text-align:center}
-  input[type=range]{
-    -webkit-appearance:none;width:120px;height:4px;background:#21262d;border-radius:2px;outline:none;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-    background:#f78166;cursor:pointer;border:2px solid #0d1117;
-  }
-  select{
-    background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;
-    padding:4px 8px;font-size:13px;font-family:inherit;outline:none;cursor:pointer;
-  }
-  .ctrl-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  .btn{
-    padding:9px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;
-    cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;
-    font-family:inherit;white-space:nowrap;
-  }
-  .btn-primary{background:#f78166;color:#fff}
-  .btn-primary:hover{background:#e06b52;transform:translateY(-1px);box-shadow:0 4px 14px rgba(247,129,102,.3)}
-  .btn-secondary{background:#21262d;color:#c9d1d9}
-  .btn-secondary:hover{background:#30363d}
-  .btn-success{background:#238636;color:#fff}
-  .btn-success:hover{background:#2ea043;transform:translateY(-1px);box-shadow:0 4px 14px rgba(35,134,54,.3)}
-  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
-  
-  .palette-strip{margin-top:16px;display:none}
-  .palette-strip.visible{display:block;animation:fadeUp .3s ease}
-  .palette-strip .title{font-size:12px;color:#8b949e;margin-bottom:8px;font-weight:500}
-  .palette-colors{display:flex;flex-wrap:wrap;gap:4px;max-height:64px;overflow-y:auto}
-  .palette-colors .swatch{
-    width:28px;height:28px;border-radius:4px;
-    border:1px solid #30363d;flex-shrink:0;position:relative;cursor:default;
-    transition:transform .15s;display:flex;align-items:center;justify-content:center;
-  }
-  .palette-colors .swatch:hover{transform:scale(1.3);z-index:2}
-  .palette-colors .swatch .code{
-    font-size:7px;font-weight:700;color:rgba(0,0,0,.5);
-    text-shadow:0 0 2px rgba(255,255,255,.5);
-    line-height:1;pointer-events:none;
-  }
-  .palette-colors .swatch .count{
-    position:absolute;bottom:-2px;right:-2px;font-size:8px;background:#0d1117;color:#c9d1d9;
-    border-radius:3px;padding:0 3px;line-height:12px;border:1px solid #30363d;
-  }
-  .palette-colors .swatch:hover::after{
-    content:'色号 ' attr(data-code) ' · ' attr(data-name) ' · ' attr(data-count) '颗';
-    position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
-    background:#1c2128;color:#c9d1d9;font-size:11px;padding:4px 10px;
-    border-radius:5px;white-space:nowrap;z-index:10;border:1px solid #30363d;
-  }
-  
-  .loading-overlay{
-    position:fixed;inset:0;background:rgba(13,17,23,.8);
-    display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);
-  }
-  .loading-overlay.hidden{display:none}
-  .spinner{width:40px;height:40px;border:3px solid #30363d;border-top-color:#f78166;border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  
-  .toast{
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-    background:#1c2128;color:#c9d1d9;padding:12px 24px;border-radius:10px;
-    border:1px solid #30363d;font-size:13px;z-index:200;
-    opacity:0;transition:all .35s ease;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  
-  footer{margin-top:40px;text-align:center;font-size:12px;color:#484f58;width:100%;padding:16px 20px 32px}
-  
-  @media(max-width:820px){
-    .preview-grid{grid-template-columns:1fr;gap:16px}
-    .controls{flex-direction:column;align-items:stretch;gap:10px}
-    .ctrl-group{border-right:none;padding-right:0;padding-bottom:8px;border-bottom:1px solid #21262d;flex-wrap:wrap}
-    .ctrl-group:last-child{border-bottom:none;padding-bottom:0}
-    .ctrl-actions{margin-left:0;justify-content:stretch}
-    .ctrl-actions .btn{flex:1;justify-content:center}
-    input[type=range]{flex:1;min-width:80px}
-    header h1{font-size:24px}
-    .container{padding:20px 16px 32px}
-  }
-  @media(max-width:480px){
-    .upload-zone{padding:36px 16px}
-    .upload-zone .icon{font-size:40px}
-    header h1{font-size:20px}
-    .preview-card .canvas-wrap{min-height:200px;padding:10px}
-  }
+:root{--bg:linear-gradient(180deg,#eef4ef 0%,#f7f3ec 100%);--panel:rgba(255,255,255,.96);--ink:#1d2733;--muted:#5f6e7e;--line:#d9e1e7;--accent:#0f766e;--accent-strong:#115e59;--accent-soft:#dff4f0;--shadow:0 18px 45px rgba(22,33,46,.1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{margin:0;min-height:100vh;color:var(--ink);background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app-shell{width:min(1480px,calc(100vw - 32px));margin:0 auto;padding:24px 0 32px}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}
+.title-block{min-width:0}
+.eyebrow{margin:0 0 8px;color:var(--accent);font-size:12px;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.04;margin:0}
+h2{margin:0;font-size:18px}
+.subcopy{margin-top:8px;color:var(--muted);font-size:15px}
+.workspace{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+.panel,.preview-panel{background:var(--panel);border:1px solid rgba(217,225,231,.95);border-radius:12px;box-shadow:var(--shadow)}
+.controls-panel{position:sticky;top:14px;padding:18px}
+.upload-box{display:grid;place-items:center;gap:8px;min-height:160px;padding:18px;border:2px dashed #b8d0cb;border-radius:12px;background:linear-gradient(180deg,#fbfffe 0%,#f3fbf9 100%);color:var(--muted);text-align:center;transition:border-color .18s,background .18s,transform .18s}
+.upload-box.dragging{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+.upload-box input.native-file{width:100%;max-width:280px;min-height:44px;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.upload-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:999px;background:var(--accent);color:#fff;font-size:28px;line-height:1}
+.upload-box strong{color:var(--ink);font-size:18px}
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.field{display:grid;gap:8px;min-width:0;color:var(--muted);font-size:13px;font-weight:700}
+.field input,.field select{width:100%;min-height:44px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:0 12px}
+.field input[type=range]{padding:0;accent-color:var(--accent);height:6px}
+.switch-row{display:grid;gap:10px;margin:18px 0;color:var(--ink);font-size:14px}
+.switch-row label{display:flex;align-items:center;gap:10px}
+.switch-row input{accent-color:var(--accent);width:18px;height:18px}
+.actions{display:grid;grid-template-columns:1fr;gap:10px}
+.btn{min-height:46px;border:0;border-radius:10px;font-weight:800;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-strong)}
+.btn-secondary{border:1px solid var(--accent);background:#fff;color:var(--accent-strong)}
+.btn-secondary:disabled{cursor:not-allowed;border-color:var(--line);color:#97a3b1}
+.btn-ghost{padding:0 18px;border:1px solid var(--line);background:rgba(255,255,255,.85);color:var(--muted);min-height:46px;border-radius:10px;font-weight:800}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.stats div{min-height:72px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fcfdfd}
+.stats span{display:block;color:var(--muted);font-size:12px}
+.stats strong{display:block;margin-top:8px;font-size:18px}
+.preview-panel{min-width:0;overflow:hidden}
+.preview-toolbar{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.preview-toolbar p{margin-top:5px;color:var(--muted);font-size:14px}
+.mobile-tip{padding:10px 18px 0;color:var(--muted);font-size:13px}
+.zoom-tools{display:grid;grid-template-columns:40px 68px 40px;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-shrink:0}
+.zoom-tools button,.zoom-tools span{height:40px;display:grid;place-items:center;border:0;background:#fff;color:var(--ink)}
+.zoom-tools span{border-inline:1px solid var(--line);color:var(--muted);font-size:13px;font-weight:800}
+.canvas-stage{position:relative;min-height:calc(100vh - 210px);max-height:calc(100vh - 210px);overflow:auto;padding:14px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:linear-gradient(45deg,#edf2f7 25%,transparent 25%),linear-gradient(-45deg,#edf2f7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#edf2f7 75%),linear-gradient(-45deg,transparent 75%,#edf2f7 75%);background-position:0 0,0 10px,10px -10px,-10px 0;background-size:20px 20px}
+#patternCanvas{display:block;margin:0 auto;max-width:none;border:1px solid #c8d0dc;background:#fff;transform-origin:top center;touch-action:pan-x pan-y}
+.empty-state{position:absolute;inset:0;display:grid;place-content:center;gap:8px;padding:24px;color:var(--muted);text-align:center}
+.empty-state strong{color:var(--ink);font-size:22px}
+.empty-state.hidden{display:none}
+.Toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1d2733;color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:all .35s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.Toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:980px){
+  .app-shell{width:min(100%-20px,980px);padding-top:18px}
+  .workspace{grid-template-columns:1fr}
+  .controls-panel{position:static}
+  .canvas-stage{min-height:520px;max-height:72vh}
+}
+@media(max-width:680px){
+  .app-shell{width:min(100%-14px,700px);padding-bottom:22px}
+  .topbar,.preview-toolbar{flex-direction:column;align-items:stretch}
+  .topbar{margin-bottom:14px}
+  .subcopy{font-size:14px}
+  .control-grid,.stats{grid-template-columns:1fr}
+  .controls-panel,.preview-panel{border-radius:12px}
+  .controls-panel{padding:14px}
+  .preview-toolbar{padding:14px}
+  .mobile-tip{padding:8px 14px 0}
+  .zoom-tools{width:100%;grid-template-columns:1fr 72px 1fr}
+  .zoom-tools button,.zoom-tools span{height:44px}
+  .canvas-stage{min-height:420px;max-height:62vh;padding:10px}
+  .upload-box{min-height:140px}
+  .upload-box input{max-width:100%}
+  .empty-state strong{font-size:20px}
+}
 </style>
 </head>
 <body>
-<div class="toast" id="toast"></div>
-<div class="loading-overlay hidden" id="loadingOverlay"><div class="spinner"></div></div>
-<header>
-  <h1>🧩 拼豆像素画</h1>
-  <p>上传一张图 ✦ 一键生成拼豆图纸 ✦ 每颗标注色号</p>
-</header>
-<div class="container">
-  <div class="upload-zone" id="uploadZone">
-    <div class="icon">🖼️</div>
-    <h2 id="uploadTitle">拖拽图片到此处，或点击选择</h2>
-    <p id="uploadDesc">支持 JPG / PNG / WebP</p>
-    <div class="hint"><span>📷 照片</span><span>🎨 插画</span><span>🖌️ Logo</span></div>
-    <input type="file" accept="image/png,image/jpeg,image/webp" id="fileInput">
-  </div>
-  <div class="preview-area" id="previewArea">
-    <div class="preview-grid">
-      <div class="preview-card">
-        <div class="label">📷 原图</div>
-        <div class="canvas-wrap"><canvas id="origCanvas"></canvas></div>
-      </div>
-      <div class="preview-card">
-        <div class="label">🧩 拼豆图纸 <span class="badge" id="gridBadge">32×32</span></div>
-        <div class="canvas-wrap"><canvas id="resultCanvas"></canvas></div>
-      </div>
+<div class="Toast" id="toast"></div>
+<main class="app-shell">
+  <header class="topbar">
+    <div class="title-block">
+      <p class="eyebrow">Perler Bead Pattern Maker</p>
+      <h1>🧩 拼豆像素画</h1>
+      <p class="subcopy">上传图片，自动生成带色号的拼豆点阵图纸。</p>
     </div>
-    <div class="controls">
-      <div class="ctrl-group">
-        <label>网格</label>
-        <input type="range" id="gridSize" min="8" max="80" value="32">
-        <span class="value" id="gridValue">32</span>
+    <button class="btn-ghost" id="resetBtn" type="button">重置</button>
+  </header>
+
+  <section class="workspace">
+    <aside class="panel controls-panel">
+      <div class="upload-box" id="dropZone">
+        <span class="upload-icon">+</span>
+        <strong>上传图片</strong>
+        <span>支持 PNG、JPG、WebP，也可拖拽或粘贴</span>
+        <input id="fileInput" class="native-file" type="file" accept="image/*">
       </div>
-      <div class="ctrl-group">
-        <label>颜色</label>
-        <input type="range" id="colorLimit" min="0" max="40" value="0">
-        <span class="value" id="colorLimitValue">不限</span>
+
+      <div class="control-grid">
+        <label class="field">
+          <span>横向豆数</span>
+          <input id="gridWidth" type="number" min="8" max="220" step="1" value="48">
+        </label>
+        <label class="field">
+          <span>豆子规格</span>
+          <select id="beadSize">
+            <option value="5">5mm 通用拼豆</option>
+            <option value="2">2mm 迷你拼豆</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>色卡</span>
+          <select id="paletteSelect">
+            <option value="classic">标准拼豆色卡</option>
+            <option value="soft">柔和色卡</option>
+            <option value="vivid">鲜艳色卡</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>网格线</span>
+          <select id="gridMode">
+            <option value="major">每 5 格加粗</option>
+            <option value="full">完整细网格</option>
+            <option value="none">隐藏网格</option>
+          </select>
+        </label>
+        <label class="field" style="grid-column:1/-1">
+          <span>色彩还原 <span id="strengthVal">78%</span></span>
+          <input id="colorStrength" type="range" min="0" max="100" value="78">
+        </label>
+        <label class="field" style="grid-column:1/-1">
+          <span>背景过滤</span>
+          <input id="alphaCutoff" type="range" min="0" max="100" value="8">
+        </label>
       </div>
-      <div class="ctrl-group">
-        <label>视图</label>
-        <select id="viewMode">
-          <option value="bead">立体豆</option>
-          <option value="code" selected>色号图</option>
-          <option value="flat">色块</option>
-          <option value="grid">网格</option>
-        </select>
+
+      <div class="switch-row">
+        <label><input id="showNumbers" type="checkbox" checked> 显示颜色编号</label>
+        <label><input id="showLegend" type="checkbox" checked> 导出用量表</label>
       </div>
-      <div class="ctrl-actions">
-        <button class="btn btn-secondary" id="resetBtn">🔄 重选</button>
-        <button class="btn btn-success" id="downloadBtn">⬇️ 下载图纸</button>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="generateBtn">生成拼豆图纸</button>
+        <button class="btn btn-secondary" id="downloadBtn" disabled>下载高清 PNG</button>
       </div>
-    </div>
-    <div class="palette-strip" id="paletteStrip">
-      <div class="title" id="paletteTitle">色号清单</div>
-      <div class="palette-colors" id="paletteColors"></div>
-    </div>
-  </div>
-</div>
-<footer>
-  所有处理均在本地完成，不上传任何图片 &middot;
-  <a href="https://github.com/Plum302/perler-pixel" target="_blank">GitHub</a> &middot;
-  <a href="https://perler-pixel-r7j8.vercel.app/" target="_blank">Vercel</a>
-</footer>
+
+      <div class="stats" id="stats">
+        <div><span>尺寸</span><strong>-</strong></div>
+        <div><span>豆数</span><strong>-</strong></div>
+        <div><span>实物大小</span><strong>-</strong></div>
+        <div><span>颜色</span><strong>-</strong></div>
+      </div>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-toolbar">
+        <div>
+          <h2>图纸预览</h2>
+          <p id="statusText">上传图片后自动生成标准拼豆点阵。</p>
+        </div>
+        <div class="zoom-tools">
+          <button id="zoomOut" title="缩小">-</button>
+          <span id="zoomLabel">100%</span>
+          <button id="zoomIn" title="放大">+</button>
+        </div>
+      </div>
+      <div class="mobile-tip">可拖动画布查看细节，使用缩放按钮调整比例。</div>
+      <div class="canvas-stage" id="canvasStage">
+        <canvas id="patternCanvas"></canvas>
+        <div class="empty-state" id="emptyState">
+          <strong>从一张照片开始</strong>
+          <span>上传后系统会自动压缩为拼豆网格，匹配近似豆色，标注色号，统计用量。</span>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
 <script>
 // ══════════════════════════════════════════════════════════════
-//  Palette: 55 standard perler bead colors with codes
+//  Palettes
 // ══════════════════════════════════════════════════════════════
-const PALETTE = [
-  {code:'01',name:'白',hex:'#ffffff'},{code:'02',name:'奶油白',hex:'#fcf5e8'},
-  {code:'03',name:'米色',hex:'#f0e6d3'},{code:'04',name:'浅肤色',hex:'#f5d6a8'},
-  {code:'05',name:'肤色',hex:'#f0c8a0'},{code:'06',name:'浅黄',hex:'#fdf4a8'},
-  {code:'07',name:'柠檬黄',hex:'#fae100'},{code:'08',name:'金黄',hex:'#f5a623'},
-  {code:'09',name:'橙黄',hex:'#f59e1a'},{code:'10',name:'橙色',hex:'#f58a1a'},
-  {code:'11',name:'桔红',hex:'#f07128'},{code:'12',name:'珊瑚',hex:'#e86a6a'},
-  {code:'13',name:'浅粉',hex:'#fcc9d4'},{code:'14',name:'粉红',hex:'#f8a4b8'},
-  {code:'15',name:'玫红',hex:'#e85d8a'},{code:'16',name:'红',hex:'#e53935'},
-  {code:'17',name:'深红',hex:'#c62828'},{code:'18',name:'酒红',hex:'#8e1a2b'},
-  {code:'19',name:'枣红',hex:'#6d1a21'},{code:'20',name:'浅紫',hex:'#d1b3e0'},
-  {code:'21',name:'紫',hex:'#9c27b0'},{code:'22',name:'深紫',hex:'#6a1b9a'},
-  {code:'23',name:'紫罗兰',hex:'#4a148c'},{code:'24',name:'淡蓝',hex:'#b3d9f2'},
-  {code:'25',name:'天蓝',hex:'#64b5f6'},{code:'26',name:'蓝',hex:'#2196f3'},
-  {code:'27',name:'深蓝',hex:'#1565c0'},{code:'28',name:'藏青',hex:'#0d47a1'},
-  {code:'29',name:'靛蓝',hex:'#1a237e'},{code:'30',name:'孔雀蓝',hex:'#00838f'},
-  {code:'31',name:'青',hex:'#00acc1'},{code:'32',name:'浅青',hex:'#80cbc4'},
-  {code:'33',name:'薄荷',hex:'#a5d6a7'},{code:'34',name:'浅绿',hex:'#81c784'},
-  {code:'35',name:'草绿',hex:'#66bb6a'},{code:'36',name:'绿',hex:'#43a047'},
-  {code:'37',name:'深绿',hex:'#2e7d32'},{code:'38',name:'墨绿',hex:'#1b5e20'},
-  {code:'39',name:'橄榄',hex:'#7d8a3a'},{code:'40',name:'卡其',hex:'#c0a070'},
-  {code:'41',name:'浅棕',hex:'#b8956a'},{code:'42',name:'棕',hex:'#8d6e63'},
-  {code:'43',name:'深棕',hex:'#5d4037'},{code:'44',name:'咖啡',hex:'#3e2723'},
-  {code:'45',name:'浅灰',hex:'#cfd8dc'},{code:'46',name:'灰',hex:'#90a4ae'},
-  {code:'47',name:'中灰',hex:'#607d8b'},{code:'48',name:'深灰',hex:'#455a64'},
-  {code:'49',name:'炭灰',hex:'#263238'},{code:'50',name:'黑',hex:'#1a1a1a'},
-  {code:'51',name:'金属银',hex:'#b0bec5'},{code:'52',name:'荧光粉',hex:'#ff4081'},
-  {code:'53',name:'荧光绿',hex:'#76ff03'},{code:'54',name:'荧光橙',hex:'#ff9100'},
-  {code:'55',name:'透明',hex:'#e0e0e0'},
-];
-const PALETTE_RGB = PALETTE.map(c => {
-  const r=parseInt(c.hex.slice(1,3),16),g=parseInt(c.hex.slice(3,5),16),b=parseInt(c.hex.slice(5,7),16);
-  return {...c,r,g,b};
-});
-const PALETTE_BY_CODE = {};
-PALETTE_RGB.forEach(c => PALETTE_BY_CODE[c.code] = c);
+const PALETTES = {
+  classic: [
+    ['01','白','#f7f6ef'],['02','奶油','#fff0b8'],['03','浅黄','#fdf4a8'],['04','柠檬黄','#fae100'],['05','金黄','#f5a623'],
+    ['06','橙黄','#f59e1a'],['07','橙色','#f58a1a'],['08','桔红','#f07128'],['09','珊瑚','#e86a6a'],['10','浅粉','#fcc9d4'],
+    ['11','粉红','#f8a4b8'],['12','玫红','#e85d8a'],['13','红','#e53935'],['14','深红','#c62828'],['15','酒红','#8e1a2b'],
+    ['16','浅紫','#d1b3e0'],['17','紫','#9c27b0'],['18','深紫','#6a1b9a'],['19','淡蓝','#b3d9f2'],['20','天蓝','#64b5f6'],
+    ['21','蓝','#2196f3'],['22','深蓝','#1565c0'],['23','藏青','#0d47a1'],['24','孔雀蓝','#00838f'],['25','青','#00acc1'],
+    ['26','薄荷','#a5d6a7'],['27','浅绿','#81c784'],['28','草绿','#66bb6a'],['29','绿','#43a047'],['30','深绿','#2e7d32'],
+    ['31','墨绿','#1b5e20'],['32','橄榄','#7d8a3a'],['33','卡其','#c0a070'],['34','浅棕','#b8956a'],['35','棕','#8d6e63'],
+    ['36','深棕','#5d4037'],['37','咖啡','#3e2723'],['38','浅灰','#cfd8dc'],['39','灰','#90a4ae'],['40','中灰','#607d8b'],
+    ['41','深灰','#455a64'],['42','炭灰','#263238'],['43','黑','#1a1a1a'],['44','金属银','#b0bec5'],['45','荧光粉','#ff4081'],
+    ['46','荧光绿','#76ff03'],['47','荧光橙','#ff9100'],
+  ],
+  soft: [
+    ['01','象牙白','#f5f0e4'],['02','浅米','#ead9b8'],['03','浅黄','#ffe389'],['04','杏橙','#f2a96f'],['05','珊瑚','#e56f71'],
+    ['06','豆沙','#b75d69'],['07','浅粉','#f2bccd'],['08','薰衣草','#bca7d8'],['09','雾蓝','#9cbdd8'],['10','天蓝','#83cae8'],
+    ['11','湖蓝','#5ba9bf'],['12','鼠尾草','#9bc2a0'],['13','浅绿','#b9d98d'],['14','橄榄','#8c9f59'],['15','陶土','#bb7453'],
+    ['16','咖啡','#7a5c4e'],['17','暖灰','#b3aaa1'],['18','冷灰','#8e9aa3'],['19','炭灰','#4e5459'],['20','黑','#171717'],
+  ],
+  vivid: [
+    ['01','白','#ffffff'],['02','荧黄','#fff13d'],['03','金黄','#ffc400'],['04','橘红','#ff6b24'],['05','正红','#e82034'],
+    ['06','酒红','#8f1028'],['07','亮粉','#ff75aa'],['08','洋红','#d5007f'],['09','亮紫','#8336c2'],['10','电蓝','#00a6e7'],
+    ['11','宝蓝','#0056b8'],['12','靛蓝','#16308a'],['13','青绿','#00b7a8'],['14','草绿','#45b649'],['15','翠绿','#007a3d'],
+    ['16','亮棕','#b96e32'],['17','深棕','#633719'],['18','银灰','#a9b0b8'],['19','石墨','#4a4d55'],['20','黑','#050505'],
+  ]
+};
+
+function hexToRgb(h){const v=h.replace('#','');return{r:parseInt(v.slice(0,2),16),g:parseInt(v.slice(2,4),16),b:parseInt(v.slice(4,6),16)}}
+
+const PREPARED = {};
+for(const[k,v]of Object.entries(PALETTES)){PREPARED[k]=v.map(([c,n,h])=>({code:c,name:n,hex:h,...hexToRgb(h)}))}
 
 // ══════════════════════════════════════════════════════════════
 //  DOM
 // ══════════════════════════════════════════════════════════════
 const $=id=>document.getElementById(id);
-const uZ=$('uploadZone'),uT=$('uploadTitle'),uD=$('uploadDesc'),fI=$('fileInput'),
-  pA=$('previewArea'),oC=$('origCanvas'),rC=$('resultCanvas'),gB=$('gridBadge'),
-  gS=$('gridSize'),gV=$('gridValue'),cL=$('colorLimit'),cV=$('colorLimitValue'),
-  vM=$('viewMode'),rB=$('resetBtn'),dB=$('downloadBtn'),pS=$('paletteStrip'),
-  pT=$('paletteTitle'),pC=$('paletteColors'),lO=$('loadingOverlay'),tS=$('toast');
-let srcImg=null,lastR=null,toastT=null;
+const canvas=$('patternCanvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+const canvasStage=$('canvasStage'),fileInput=$('fileInput'),dropZone=$('dropZone');
+const gridWidthInput=$('gridWidth'),beadSizeInput=$('beadSize'),paletteSelect=$('paletteSelect');
+const gridModeInput=$('gridMode'),colorStrengthInput=$('colorStrength'),alphaCutoffInput=$('alphaCutoff');
+const showNumbersInput=$('showNumbers'),showLegendInput=$('showLegend');
+const generateBtn=$('generateBtn'),downloadBtn=$('downloadBtn'),resetBtn=$('resetBtn');
+const stats=$('stats'),statusText=$('statusText'),emptyState=$('emptyState');
+const zoomOut=$('zoomOut'),zoomIn=$('zoomIn'),zoomLabel=$('zoomLabel'),toast=$('toast');
 
-function toast(m){tS.textContent=m;tS.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>tS.classList.remove('show'),2500)}
+let srcImg=null,pattern=null,zoom=1,toastT=null;
 
-// ─── Nearest color ───────────────────────────────────────────
-function nearest(r,g,b){
-  let bC=PALETTE_RGB[0],bD=1/0;
-  for(const c of PALETTE_RGB){const dr=r-c.r,dg=g-c.g,db=b-c.b,d=dr*dr+dg*dg+db*db;if(d<bD){bD=d;bC=c}}
-  return bC;
+function toastMsg(m){toast.textContent=m;toast.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('show'),2500)}
+function clamp(v,mi,ma){return Math.min(ma,Math.max(mi,v))}
+function setZoom(z){zoom=clamp(Number(z.toFixed(2)),.35,2.5);canvas.style.transform='scale('+zoom+')';zoomLabel.textContent=Math.round(zoom*100)+'%'}
+function fitZoom(){
+  if(!pattern||!canvasStage)return;
+  const aw=canvasStage.clientWidth-28;
+  if(aw<=0||canvas.width<=0)return;
+  const f=Math.min(1,aw/canvas.width);
+  setZoom(window.innerWidth<=680?Math.max(f,.45):1)
+}
+function totalBeads(){return Array.from(pattern.counts.values()).reduce((s,c)=>s+c,0)}
+
+function enhanceColor(c,str){
+  const f=.55+str/100,avg=(c.r+c.g+c.b)/3;
+  return{r:clamp(Math.round(avg+(c.r-avg)*f),0,255),g:clamp(Math.round(avg+(c.g-avg)*f),0,255),b:clamp(Math.round(avg+(c.b-avg)*f),0,255)}
 }
 
-// ─── K-means ─────────────────────────────────────────────────
-function kmeans(colors,k,maxI=20){
-  if(colors.length<=k)return colors;
-  const step=Math.max(1,Math.floor(colors.length/k));let cents=[];
-  for(let i=0;i<k;i++){const idx=Math.min(i*step,colors.length-1);cents.push({r:colors[idx][0],g:colors[idx][1],b:colors[idx][2]})}
-  for(let iter=0;iter<maxI;iter++){
-    const assign=colors.map(p=>{let b=0,bD=1/0;for(let i=0;i<cents.length;i++){const dr=p[0]-cents[i].r,dg=p[1]-cents[i].g,db=p[2]-cents[i].b,d=dr*dr+dg*dg+db*db;if(d<bD){bD=d;b=i}}return b})
-    const sums=cents.map(()=>({r:0,g:0,b:0,count:0}));colors.forEach((p,i)=>{const j=assign[i];sums[j].r+=p[0];sums[j].g+=p[1];sums[j].b+=p[2];sums[j].count++})
-    let ch=false;cents=cents.map((c,i)=>{if(sums[i].count===0)return c;const nr=Math.round(sums[i].r/sums[i].count),ng=Math.round(sums[i].g/sums[i].count),nb=Math.round(sums[i].b/sums[i].count)
-      if(nr!==c.r||ng!==c.g||nb!==c.b)ch=true;return{r:nr,g:ng,b:nb}});if(!ch)break}
-  return cents.map(c=>[c.r,c.g,c.b]);
+function colorDist(a,b){
+  const rm=(a.r+b.r)/2,r=a.r-b.r,g=a.g-b.g,bl=a.b-b.b;
+  return Math.sqrt((2+rm/256)*r*r+4*g*g+(2+(255-rm)/256)*bl*bl)
 }
 
-// ─── Main processing ────────────────────────────────────────
-function process(img){
-  const grid=parseInt(gS.value),limit=parseInt(cL.value);
-  gV.textContent=grid;gB.textContent=grid+'×'+grid;cV.textContent=limit===0?'不限':limit+'色';
-  
-  // Original
-  const ox=oC.getContext('2d'),wrap=oC.parentElement,cw=wrap.clientWidth-32||380,sc=Math.min(cw/img.width,400/img.height,1);
-  oC.width=Math.round(img.width*sc);oC.height=Math.round(img.height*sc);ox.drawImage(img,0,0,oC.width,oC.height);
-  
-  // Sample
-  const tc=document.createElement('canvas'),tx=tc.getContext('2d');tc.width=grid;tc.height=grid;
-  tx.imageSmoothingEnabled=true;tx.imageSmoothingQuality='high';tx.drawImage(img,0,0,grid,grid);
-  const d=tx.getImageData(0,0,grid,grid).data,raw=[];
-  for(let i=0;i<grid*grid;i++){const idx=i*4;raw.push([d[idx],d[idx+1],d[idx+2]])}
-  
-  // Color reduce
-  let reduced=null;if(limit>0)reduced=kmeans(raw,limit);
-  
-  // Map
-  const pix=[];const um=new Map();
-  for(let i=0;i<raw.length;i++){
-    const[r,g,b]=raw[i];let m;
-    if(reduced){let bC=0,bD=1/0;for(let j=0;j<reduced.length;j++){const dr=r-reduced[j][0],dg=g-reduced[j][1],db=b-reduced[j][2],d=dr*dr+dg*dg+db*db;if(d<bD){bD=d;bC=j}}
-      m=nearest(reduced[bC][0],reduced[bC][1],reduced[bC][2])}
-    else m=nearest(r,g,b);
-    pix.push(m);const k=m.code;if(um.has(k))um.get(k).count++;else um.set(k,{...m,count:1})}
-  const uc=[...um.values()].sort((a,b)=>parseInt(a.code)-parseInt(b.code));
-  render(pix,grid);renderPal(uc);lastR={pix,uc,grid};
+function nearest(rgb,palette){
+  let bC=palette[0],bS=Infinity;
+  for(const c of palette){const s=colorDist(rgb,c);if(s<bS){bS=s;bC=c}}
+  return bC
 }
 
-// ─── Get text color (black or white) for a background ──────
-function textColor(r,g,b){
-  const lum=(0.299*r+0.587*g+0.114*b)/255;
-  return lum>0.55?'#222':'#fff';
+function textCol(r,g,b){return(r*299+g*587+b*114)/1000>155?'#17202a':'#ffffff'}
+
+// ══════════════════════════════════════════════════════════════
+//  Image loading
+// ══════════════════════════════════════════════════════════════
+function readFile(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('图片加载失败'));i.src=r.result}
+    r.onerror=()=>rej(new Error('文件读取失败'));r.readAsDataURL(file)
+  })
 }
 
-// ─── Render result ──────────────────────────────────────────
-function render(pix,grid){
-  const mode=vM.value;
-  const cs=Math.max(10,Math.min(22,Math.floor(560/grid)));
-  const gap=mode==='flat'?0.5:1.5;
-  const p=12;
-  const sz=grid*cs+(grid-1)*gap+p*2;
-  
-  rC.width=sz;rC.height=sz;
-  const ctx=rC.getContext('2d');ctx.fillStyle='#161b22';ctx.fillRect(0,0,sz,sz);
-  
-  const showCode=(mode==='code');
-  
-  for(let r=0;r<grid;r++)for(let c=0;c<grid;c++){
-    const px=pix[r*grid+c];
-    const x=p+c*(cs+gap),y=p+r*(cs+gap);
-    
-    if(mode==='bead'){
-      const cx=x+cs/2,cy=y+cs/2,ra=cs/2-1;
-      ctx.fillStyle=px.hex;
-      ctx.beginPath();ctx.arc(cx,cy,ra,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,.18)';
-      ctx.beginPath();ctx.arc(cx-ra*.2,cy-ra*.2,ra*.5,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='rgba(0,0,0,.10)';
-      ctx.beginPath();ctx.arc(cx+ra*.15,cy+ra*.15,ra*.4,0,Math.PI*2);ctx.fill();
-    }
-    else if(mode==='flat'){
-      ctx.fillStyle=px.hex;ctx.fillRect(x,y,cs,cs);
-    }
-    else if(mode==='grid'){
-      ctx.fillStyle=px.hex;ctx.fillRect(x,y,cs,cs);
-      ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=.5;ctx.strokeRect(x,y,cs,cs);
-    }
-    
-    // Color code overlay
-    if(showCode){
-      const fontSize=Math.max(5,Math.min(9,cs-6));
-      ctx.fillStyle=textColor(px.r,px.g,px.b);
-      ctx.font='bold '+fontSize+'px monospace';
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(px.code,x+cs/2,y+cs/2);
-    }
-  }
-}
-
-// ─── Palette legend ─────────────────────────────────────────
-function renderPal(uc){
-  pC.innerHTML='';
-  if(!uc.length){pS.classList.remove('visible');return}
-  pT.textContent='色号清单（'+uc.length+'种，共'+uc.reduce((s,c)=>s+c.count,0)+'颗）';
-  uc.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='swatch';d.style.background=c.hex;
-    d.dataset.code=c.code;d.dataset.name=c.name;d.dataset.count=c.count;
-    const cd=document.createElement('span');
-    cd.className='code';cd.textContent=c.code;
-    cd.style.color=textColor(c.r,c.g,c.b);
-    d.appendChild(cd);
-    const b=document.createElement('span');
-    b.className='count';b.textContent=c.count;
-    d.appendChild(b);
-    pC.appendChild(d);
-  });
-  pS.classList.add('visible');
+async function handleFile(file){
+  if(!file||!file.type.startsWith('image/'))return
+  statusText.textContent='正在读取图片...';
+  try{srcImg=await readFile(file);makePattern()}catch(e){statusText.textContent=e.message}
 }
 
 // ══════════════════════════════════════════════════════════════
-//  Download - high-res printable pattern with color codes
+//  Core processing
 // ══════════════════════════════════════════════════════════════
-function download(){
-  if(!lastR)return;
-  const{pix,uc,grid}=lastR;
+function makePattern(){
+  if(!srcImg){statusText.textContent='请先上传一张图片。';return}
   
-  // Cell size scales with grid: small grid = big cells, large grid = small cells
-  const cs=Math.max(14,Math.min(28,Math.floor(700/grid)));
-  const gap=2;
-  const p=30;
-  const headH=70;
-  const gs=grid*cs+(grid-1)*gap;
+  const tw=clamp(Number(gridWidthInput.value)||48,8,220);
+  gridWidthInput.value=tw;
+  const th=clamp(Math.round(tw*srcImg.height/srcImg.width),8,260);
+  const palette=PREPARED[paletteSelect.value];
+  const strength=Number(colorStrengthInput.value);
+  const cutoff=Number(alphaCutoffInput.value)/100;
+  document.getElementById('strengthVal').textContent=strength+'%';
   
-  const liH=18;
-  const lCols=4; // 4 columns of color swatches
-  const lItems=uc.length;
-  const lRows=Math.ceil(lItems/lCols);
-  const lColW=120;
-  const lH=Math.max(lRows*liH+30,60);
+  const sp=document.createElement('canvas');
+  sp.width=tw;sp.height=th;
+  const sx=sp.getContext('2d',{willReadFrequently:true});
+  sx.imageSmoothingEnabled=true;sx.imageSmoothingQuality='high';
+  sx.clearRect(0,0,tw,th);sx.drawImage(srcImg,0,0,tw,th);
   
-  const totalW=gs+p*2;
-  const totalH=headH+gs+24+lH+p*2;
+  const px=sx.getImageData(0,0,tw,th).data;
+  const cells=[];const counts=new Map();
   
-  const ca=document.createElement('canvas');
-  ca.width=totalW;ca.height=totalH;
-  const ctx=ca.getContext('2d');
-  
-  // White background
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,totalW,totalH);
-  
-  // Title bar
-  ctx.fillStyle='#1a1a1a';
-  ctx.font='bold 20px "PingFang SC","Microsoft YaHei",sans-serif';
-  ctx.textAlign='left';ctx.textBaseline='top';
-  ctx.fillText('🧩 拼豆图纸',p,22);
-  
-  ctx.fillStyle='#666';
-  ctx.font='13px sans-serif';
-  ctx.textBaseline='top';
-  ctx.fillText(grid+'×'+grid+'  |  共'+uc.reduce((s,c)=>s+c.count,0)+'颗  |  色号对照表',p,50);
-  
-  // Grid with color codes
-  const gy=headH;
-  for(let r=0;r<grid;r++)for(let c=0;c<grid;c++){
-    const px=pix[r*grid+c];
-    const x=p+c*(cs+gap),y=gy+r*(cs+gap);
-    
-    // Bead
-    ctx.fillStyle=px.hex;
-    const cx=x+cs/2,cy=y+cs/2,ra=cs/2-1;
-    ctx.beginPath();ctx.arc(cx,cy,ra,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='rgba(0,0,0,.12)';ctx.lineWidth=.5;
-    ctx.beginPath();ctx.arc(cx,cy,ra,0,Math.PI*2);ctx.stroke();
-    
-    // Color code in the center
-    const fsz=Math.max(5,Math.min(12,cs-6));
-    ctx.fillStyle=textColor(px.r,px.g,px.b);
-    ctx.font='bold '+fsz+'px "Courier New",monospace';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(px.code,cx,cy);
+  for(let y=0;y<th;y++){
+    const row=[];
+    for(let x=0;x<tw;x++){
+      const i=(y*tw+x)*4,alpha=px[i+3]/255;
+      const raw={r:px[i],g:px[i+1],b:px[i+2]};
+      const wt=255-cutoff*88;
+      const nearW=raw.r>=wt&&raw.g>=wt&&raw.b>=wt;
+      const lowC=Math.max(raw.r,raw.g,raw.b)-Math.min(raw.r,raw.g,raw.b)<=8;
+      if(alpha<=cutoff||(cutoff>0&&nearW&&lowC)){row.push(null);continue}
+      const m=nearest(enhanceColor(raw,strength),palette);
+      row.push(m);counts.set(m.code,(counts.get(m.code)||0)+1)
+    }
+    cells.push(row)
   }
   
-  // Legend: color codes table
-  const ly=headH+gs+24;
-  ctx.fillStyle='#1a1a1a';
-  ctx.font='bold 13px "PingFang SC","Microsoft YaHei",sans-serif';
-  ctx.textBaseline='top';
-  ctx.fillText('色号对照表',p,ly);
+  pattern={width:tw,height:th,cells,counts,palette,beadSize:Number(beadSizeInput.value)};
+  draw();updateStats();fitZoom();
+  emptyState.classList.add('hidden');
+  downloadBtn.disabled=false;
+  statusText.textContent='已生成拼豆点阵，可继续调节参数或下载图纸。'
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Drawing
+// ══════════════════════════════════════════════════════════════
+function draw(exportMode){
+  if(!pattern){ctx.clearRect(0,0,canvas.width,canvas.height);return}
   
-  const swY=ly+24;
-  uc.forEach((c,i)=>{
-    const col=i%lCols;
-    const row=Math.floor(i/lCols);
-    const sx=p+col*lColW;
-    const sy=swY+row*liH;
-    
-    // Swatch
-    ctx.fillStyle=c.hex;
-    ctx.fillRect(sx,sy,14,14);
-    ctx.strokeStyle='rgba(0,0,0,.12)';ctx.strokeRect(sx,sy,14,14);
-    
-    // Code + name
-    ctx.fillStyle='#333';
-    ctx.font='11px "PingFang SC","Microsoft YaHei",sans-serif';
-    ctx.textBaseline='middle';
-    ctx.fillText(c.code+' '+c.name+' ('+c.count+')',sx+18,sy+7);
-  });
+  const showLegend=exportMode?showLegendInput.checked:false;
+  const cell=exportMode?28:clamp(Math.floor(760/pattern.width),10,24);
+  const margin=exportMode?56:24;
+  const legendW=showLegend?300:0;
+  const w=margin*2+pattern.width*cell+legendW;
+  const h=margin*2+pattern.height*cell;
   
-  // Footer
-  ctx.fillStyle='#bbb';
-  ctx.font='9px sans-serif';
-  ctx.textBaseline='bottom';ctx.textAlign='right';
-  ctx.fillText('由 拼豆像素画 生成 · perler-pixel.vercel.app',totalW-p,totalH-p);
+  canvas.width=w;canvas.height=h;
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+  ctx.textAlign='center';ctx.textBaseline='middle';
   
-  const link=document.createElement('a');
-  link.download='拼豆图纸_'+grid+'x'+grid+'.png';
-  link.href=ca.toDataURL('image/png');
-  link.click();
-  toast('✅ 图纸下载成功！每颗都标注了色号 🎉');
+  for(let y=0;y<pattern.height;y++)for(let x=0;x<pattern.width;x++){
+    const c=pattern.cells[y][x],px=margin+x*cell,py=margin+y*cell;
+    ctx.fillStyle=c?c.hex:'#ffffff';ctx.fillRect(px,py,cell,cell);
+    if(c&&showNumbersInput.checked&&cell>=14){
+      const tc=textCol(c.r,c.g,c.b);ctx.fillStyle=tc;
+      ctx.font='bold '+Math.max(8,Math.floor(cell*.36))+'px "Courier New",monospace';
+      ctx.fillText(c.code,px+cell/2,py+cell/2)
+    }
+  }
+  
+  // Grid
+  const gm=gridModeInput.value;
+  if(gm!=='none'){
+    const ex=margin+pattern.width*cell,ey=margin+pattern.height*cell;
+    for(let x=0;x<=pattern.width;x++){
+      const mj=gm==='major'&&x%5===0;
+      ctx.strokeStyle=mj?'#1f2937':'rgba(23,32,42,.15)';
+      ctx.lineWidth=mj?1.4:.6;
+      ctx.beginPath();ctx.moveTo(margin+x*cell+.5,margin);ctx.lineTo(margin+x*cell+.5,ey);ctx.stroke()
+    }
+    for(let y=0;y<=pattern.height;y++){
+      const mj=gm==='major'&&y%5===0;
+      ctx.strokeStyle=mj?'#1f2937':'rgba(23,32,42,.15)';
+      ctx.lineWidth=mj?1.4:.6;
+      ctx.beginPath();ctx.moveTo(margin,margin+y*cell+.5);ctx.lineTo(ex,margin+y*cell+.5);ctx.stroke()
+    }
+  }
+  
+  if(showLegend)drawLegend(margin+pattern.width*cell+36,margin,cell)
+}
+
+function drawLegend(x,y,cell){
+  const entries=Array.from(pattern.counts.entries())
+    .map(([code,count])=>({...pattern.palette.find(i=>i.code===code),count}))
+    .sort((a,b)=>b.count-a.count);
+  
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#17202a';ctx.font='700 22px "PingFang SC",sans-serif';ctx.fillText('颜色用量',x,y+6);
+  ctx.font='14px sans-serif';ctx.fillStyle='#647084';
+  ctx.fillText(pattern.width+'×'+pattern.height+'格 共'+totalBeads()+'颗',x,y+32);
+  let ry=y+60;
+  for(const item of entries){
+    ctx.fillStyle=item.hex;ctx.fillRect(x,ry-16,22,22);
+    ctx.strokeStyle='#d7dde7';ctx.strokeRect(x,ry-16,22,22);
+    ctx.fillStyle='#17202a';ctx.font='700 13px Arial,sans-serif';ctx.fillText(item.code,x+30,ry-1);
+    ctx.font='13px sans-serif';ctx.fillText(item.name+'  '+item.count+'颗',x+62,ry-1);
+    ry+=30;if(ry>canvas.height-24){ctx.fillStyle='#647084';ctx.fillText('更多颜色请放大图纸查看',x,ry);break}
+  }
+  ctx.textAlign='center';ctx.textBaseline='middle'
+}
+
+function updateStats(){
+  const rw=(pattern.width*pattern.beadSize/10).toFixed(1);
+  const rh=(pattern.height*pattern.beadSize/10).toFixed(1);
+  const vals=[pattern.width+'×'+pattern.height,totalBeads()+'颗',rw+'×'+rh+' cm',pattern.counts.size+'色'];
+  stats.querySelectorAll('strong').forEach((n,i)=>{n.textContent=vals[i]})
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Download
+// ══════════════════════════════════════════════════════════════
+function downloadPng(){
+  if(!pattern)return;
+  draw(true);
+  const a=document.createElement('a');
+  a.download='拼豆图纸_'+pattern.width+'x'+pattern.height+'.png';
+  a.href=canvas.toDataURL('image/png');a.click();
+  toastMsg('✅ 图纸下载成功！');
+  draw(false);fitZoom()
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Reset
+// ══════════════════════════════════════════════════════════════
+function resetAll(){
+  srcImg=null;pattern=null;fileInput.value='';
+  gridWidthInput.value=48;beadSizeInput.value='5';
+  paletteSelect.value='classic';gridModeInput.value='major';
+  colorStrengthInput.value=78;alphaCutoffInput.value=8;
+  showNumbersInput.checked=true;showLegendInput.checked=true;
+  document.getElementById('strengthVal').textContent='78%';
+  downloadBtn.disabled=true;
+  emptyState.classList.remove('hidden');
+  statusText.textContent='上传图片后自动生成标准拼豆点阵。';
+  stats.querySelectorAll('strong').forEach(n=>{n.textContent='-'});
+  ctx.clearRect(0,0,canvas.width,canvas.height);setZoom(1)
 }
 
 // ══════════════════════════════════════════════════════════════
 //  Events
 // ══════════════════════════════════════════════════════════════
+fileInput.addEventListener('change',e=>handleFile(e.target.files[0]));
+generateBtn.addEventListener('click',makePattern);
+downloadBtn.addEventListener('click',downloadPng);
+resetBtn.addEventListener('click',resetAll);
 
-function loadImg(file){
-  if(!file)return;
-  if(!file.type.match(/^image\/(png|jpeg|webp|gif)$/)){toast('⚠️ 不支持的格式');return}
-  if(file.size>15*1024*1024){toast('⚠️ 图片太大，请压缩到15MB以内');return}
-  lO.classList.remove('hidden');
-  const r=new FileReader();
-  r.onload=e=>{const i=new Image();
-    i.onload=()=>{srcImg=i;uZ.classList.add('has-image');pA.classList.add('visible');uT.textContent='📸 '+file.name;uD.textContent=i.width+'×'+i.height+' 点击重新选择';process(i);lO.classList.add('hidden')}
-    i.onerror=()=>{lO.classList.add('hidden');toast('⚠️ 图片加载失败')};i.src=e.target.result}
-  r.onerror=()=>{lO.classList.add('hidden');toast('⚠️ 文件读取失败')};r.readAsDataURL(file);
-}
+[gridWidthInput,beadSizeInput,paletteSelect,gridModeInput,colorStrengthInput,alphaCutoffInput,showNumbersInput,showLegendInput]
+  .forEach(el=>el.addEventListener('input',()=>{if(srcImg)makePattern()}));
 
-fI.addEventListener('change',e=>{if(e.target.files.length)loadImg(e.target.files[0])});
-uZ.addEventListener('dragover',e=>{e.preventDefault();uZ.classList.add('dragover')});
-uZ.addEventListener('dragleave',()=>uZ.classList.remove('dragover'));
-uZ.addEventListener('drop',e=>{e.preventDefault();uZ.classList.remove('dragover');if(e.dataTransfer.files.length)loadImg(e.dataTransfer.files[0])});
-gS.addEventListener('input',()=>{if(srcImg)process(srcImg)});
-cL.addEventListener('input',()=>{const v=parseInt(cL.value);cV.textContent=v===0?'不限':v+'色';if(srcImg)process(srcImg)});
-vM.addEventListener('change',()=>{if(lastR)render(lastR.pix,lastR.grid)});
-dB.addEventListener('click',()=>{if(srcImg)download()});
-rB.addEventListener('click',()=>{srcImg=null;lastR=null;uZ.classList.remove('has-image');pA.classList.remove('visible');pS.classList.remove('visible');uT.textContent='拖拽图片到此处，或点击选择';uD.textContent='支持 JPG / PNG / WebP';fI.value='';toast('🔄 已重置')});
-window.addEventListener('resize',()=>{if(srcImg)process(srcImg)});
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey&&srcImg){e.preventDefault();download()}});
+dropZone.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();dropZone.classList.add('dragging')});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragging'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dropZone.classList.remove('dragging');handleFile(e.dataTransfer.files[0])});
+window.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragging')});
+window.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragging');handleFile(e.dataTransfer.files[0])});
+window.addEventListener('paste',e=>{const f=Array.from(e.clipboardData?.files||[]).find(i=>i.type.startsWith('image/'));if(f)handleFile(f)});
+
+zoomOut.addEventListener('click',()=>setZoom(zoom-.1));
+zoomIn.addEventListener('click',()=>setZoom(zoom+.1));
+window.addEventListener('resize',()=>{if(pattern)fitZoom()});
+
+resetAll();
 </script>
 </body>
 </html>
