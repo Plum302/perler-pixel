@@ -567,8 +567,38 @@ document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&e.key=
 // Init
 (function(){if(!isUnlocked())ls.classList.remove('hidden');else ls.classList.add('hidden')})();
 </script>
+<div class="lic-overlay" id="lockScreen">
+  <div class="lic-box">
+    <div class="logo">🧩</div>
+    <h2>拼豆像素画</h2>
+    <p class="sub">请输入密码解锁使用 · 每份订单对应一个独立密码</p>
+    <input class="lic-input" id="licInput" type="text" placeholder="PD-XXXX-XXXX-XXXX" maxlength="19" autocomplete="off" spellcheck="false">
+    <button class="lic-btn lic-btn-primary" id="licBtn">🔓 解锁</button>
+    <div class="lic-error" id="licError"></div>
+    <div class="lic-success" id="licSuccess"></div>
+    <div class="lic-used" id="licTrial">
+      <span>未购买？</span>
+      <a href="#" id="licBuy">联系购买 →</a>
+    </div>
+  </div>
+</div>
+<div class="admin-panel" id="adminPanel">
+  <button class="admin-close" id="adminClose">&times;</button>
+  <div class="admin-box">
+    <h3>🔑 管理员 · 密码生成器</h3>
+    <div class="admin-field">
+      <label>订单号（纯数字）</label>
+      <input id="adminOrder" type="text" placeholder="例如 0001" maxlength="10">
+    </div>
+    <button class="lic-btn lic-btn-primary" id="adminGen" style="margin-bottom:12px">生成密码</button>
+    <div class="admin-key-result" id="adminResult"></div>
+    <div class="admin-log" id="adminLog"></div>
+  </div>
+</div>
+<div class="lic-dev" id="devBtn" title="管理员入口（Ctrl+Shift+K）">🔧</div>
 </body>
 </html>
+
 
 
 
