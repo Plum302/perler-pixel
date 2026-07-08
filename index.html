@@ -100,8 +100,8 @@ h2{margin:0;font-size:18px}
 .lic-used{color:#8b949e;font-size:12px;margin-top:16px;padding-top:16px;border-top:1px solid #21262d}
 .lic-used a{color:#58a6ff;text-decoration:none}
 .lic-used a:hover{text-decoration:underline}
-.lic-dev{position:fixed;bottom:12px;right:16px;font-size:11px;color:#30363d;z-index:10000;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color .2s}
-.lic-dev:hover{color:#484f58}
+.lic-dev{position:fixed;bottom:12px;right:16px;font-size:13px;color:#58a6ff;z-index:999999;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color .2s}
+.lic-dev:hover{color:#c9d1d9;text-decoration:underline}
 .admin-panel{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
 .admin-panel.show{display:flex}
 .admin-box{background:#1c2128;border:1px solid #30363d;border-radius:16px;padding:32px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
@@ -554,6 +554,7 @@ li.addEventListener('input',function(){let v=this.value.toUpperCase().replace(/[
     if(p[2]&&p[2].length>4){p[3]=(p[2].slice(4)+(p[3]||'')).slice(0,4);p[2]=p[2].slice(0,4)}if(p[3]&&p[3].length>4)p[3]=p[3].slice(0,4);v=p.join('-')
   }else if(p[0]!=='PD')v=v.replace(/^[^P]*/,'');this.value=v})
 lbu.addEventListener('click',function(e){e.preventDefault();le.textContent='请联系作者微信/QQ 获取密码'})
+document.getElementById('licAdminBtn').addEventListener('click',function(e){e.preventDefault();document.getElementById('adminPanel').classList.add('show');document.getElementById('adminOrder').focus()})
 // Admin panel
 const ap=$l('adminPanel'),ao=$l('adminOrder'),ag=$l('adminGen'),ar=$l('adminResult'),al=$l('adminLog'),ac=$l('adminClose'),db=$l('devBtn')
 db.addEventListener('click',function(){ap.classList.add('show');ao.focus()})
@@ -576,7 +577,10 @@ document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&e.key=
     <button class="lic-btn lic-btn-primary" id="licBtn">🔓 解锁</button>
     <div class="lic-error" id="licError"></div>
     <div class="lic-success" id="licSuccess"></div>
-    <div class="lic-used" id="licTrial">
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;font-size:12px">
+  <a href="#" id="licAdminBtn" style="color:#8b949e;text-decoration:none">🔧 管理员</a>
+</div>
+<div class="lic-used" id="licTrial">
       <span>未购买？</span>
       <a href="#" id="licBuy">联系购买 →</a>
     </div>
@@ -598,6 +602,8 @@ document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&e.key=
 <div class="lic-dev" id="devBtn" title="管理员入口（Ctrl+Shift+K）">🔧</div>
 </body>
 </html>
+
+
 
 
 
